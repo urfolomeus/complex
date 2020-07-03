@@ -1,0 +1,22 @@
+language: generic
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t urfolomeus/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true urfolomeus/react-test npm run test
+
+after_success:
+  - docker build -t urfolomeus/multi-client ./client
+  - docker build -t urfolomeus/multi-nginx ./nginx
+  - docker build -t urfolomeus/multi-server ./server
+  - docker build -t urfolomeus/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push urfolomeus/multi-client
+  - docker push urfolomeus/multi-nginx
+  - docker push urfolomeus/multi-server
+  - docker push urfolomeus/multi-worker
